@@ -1,6 +1,6 @@
+import 'Sextou.dart';
+import 'model/Pessoa.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -26,91 +26,65 @@ class Tela1 extends StatefulWidget {
   State createState() => _Tela1State();
 }
 
-class _Tela1State extends State {
-  List<Pessoa> lista = [];
-
-  @override
-  void initState() {
-    super.initState();
-    carregarLista();
-  }
-
-  Future<void> carregarLista() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? listaString = prefs.getString('lista_pessoas');
-    List<dynamic> jsonList = json.decode(listaString);
-    lista = jsonList.map((json) => Pessoa.fromJson(json)).toList();
-    setState(() {});
-    }
-
-  Future<void> salvarLista() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String jsonString = json.encode(lista.map((p) => p.toJson()).toList());
-    await prefs.setString('lista_pessoas', jsonString);
-  }
+class _Tela1State extends State<Tela1> {
+  List<Pessoa> lista = [
+    Pessoa(nome: "Victor", idade: 37, sobrenome: "Alves", cpf: "000.000.000-00"),
+    // Adicione mais pessoas conforme necessário
+  ];
 
   void removerItem(int index) {
     setState(() {
       lista.removeAt(index);
-      salvarLista(); // Atualiza o armazenamento após a remoção
-    });
-  }
-
-  void adicionarPessoa(Pessoa pessoa) {
-    setState(() {
-      lista.add(pessoa);
-      salvarLista(); // Atualiza o armazenamento após a adição
     });
   }
 
   void abrirModalCadastro() {
+    final nomeController = TextEditingController();
+    final sobrenomeController = TextEditingController();
+    final idadeController = TextEditingController();
+    final cpfController = TextEditingController();
+
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        String nome = '';
-        String sobrenome = '';
-        int idade = 0;
-        String cpf = '';
-
         return Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
+                controller: nomeController,
                 decoration: InputDecoration(labelText: 'Nome'),
-                onChanged: (value) {
-                  nome = value;
-                },
               ),
               TextField(
+                controller: sobrenomeController,
                 decoration: InputDecoration(labelText: 'Sobrenome'),
-                onChanged: (value) {
-                  sobrenome = value;
-                },
               ),
               TextField(
+                controller: idadeController,
                 decoration: InputDecoration(labelText: 'Idade'),
                 keyboardType: TextInputType.number,
-                onChanged: (value) {
-                  idade = int.tryParse(value) ?? 0;
-                },
               ),
               TextField(
+                controller: cpfController,
                 decoration: InputDecoration(labelText: 'CPF'),
-                onChanged: (value) {
-                  cpf = value;
-                },
               ),
-              SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  if (nome.isNotEmpty && sobrenome.isNotEmpty && idade > 0 && cpf.isNotEmpty) {
-                    adicionarPessoa(Pessoa(nome: nome, idade: idade, sobrenome: sobrenome, cpf: cpf));
-                    Navigator.pop(context); // Fecha o modal
-                  }
+                  final novoCadastro = Pessoa(
+                    nome: nomeController.text,
+                    sobrenome: sobrenomeController.text,
+                    idade: int.tryParse(idadeController.text) ?? 0,
+                    cpf: cpfController.text,
+                  );
+
+                  setState(() {
+                    lista.add(novoCadastro);
+                  });
+
+                  Navigator.pop(context);
                 },
-                child: Text('Adicionar Pessoa'),
+                child: Text('Cadastrar'),
               ),
             ],
           ),
@@ -141,80 +115,6 @@ class _Tela1State extends State {
         child: Icon(Icons.add),
         backgroundColor: Colors.cyan,
       ),
-    );
-  }
-}
-
-class Sextou extends StatelessWidget {
-  final String nome;
-  final String sobrenome;
-  final Function() onRemove;
-
-  const Sextou({required this.nome, required this.sobrenome, required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 10,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Container(
-            margin: EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$nome',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                Text(
-                  "$sobrenome",
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: onRemove,
-            icon: Icon(Icons.delete),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class Pessoa {
-  String nome;
-  int idade;
-  String sobrenome;
-  String cpf;
-
-  Pessoa({
-    required this.nome,
-    required this.idade,
-    required this.sobrenome,
-    required this.cpf,
-  });
-
-  // Método para converter um objeto Pessoa em um mapa (JSON)
-  Map<String, dynamic> toJson() {
-    return {
-      'nome': nome,
-      'idade': idade,
-      'sobrenome': sobrenome,
-      'cpf': cpf,
-    };
-  }
-
-  // Método para criar um objeto Pessoa a partir de um mapa (JSON)
-  factory Pessoa.fromJson(Map<String, dynamic> json) {
-    return Pessoa(
-      nome: json['nome'],
-      idade: json['idade'],
-      sobrenome: json['sobrenome'],
-      cpf: json['cpf'],
     );
   }
 }

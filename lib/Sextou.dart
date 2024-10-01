@@ -1,4 +1,6 @@
+import 'main.dart';
 import 'package:flutter/material.dart';
+
 
 class Sextou extends StatelessWidget {
   final String nome;
